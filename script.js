@@ -1,10 +1,8 @@
 // Inicializa o VLibras
 window.onload = function() {
-    if (window.location.protocol === 'file:') {
-        console.error("Rodando em file://.");
-        return;
+    if (window.location.protocol !== 'file:') {
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
     }
-    new window.VLibras.Widget('https://vlibras.gov.br/app');
 };
 
 const btnMicrofone = document.getElementById('btn-microfone');
@@ -15,18 +13,16 @@ const statusEl = document.getElementById('status');
 let reconhecimento;
 let ouvindo = false;
 
-if (window.location.protocol === 'file:') {
-    statusEl.innerText = 'ERRO: Abra usando o Live Server!';
-    statusEl.style.color = '#ff4757';
-    btnMicrofone.disabled = true;
-    alert("ATENÇÃO!\n\nVocê abriu o arquivo direto do computador (file://).\nUse o Live Server.");
+// Verifica se os elementos existem na tela antes de fazer qualquer coisa
+if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
+    console.error("Erro: Elementos HTML não encontrados. Verifique seu index.html.");
 } else {
     btnEnviar.disabled = true;
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-        statusEl.innerText = 'Navegador não suporta voz. Use Chrome ou Edge.';
+        statusEl.innerText = 'Navegador não suporta voz. Use Chrome.';
         statusEl.style.color = 'red';
         btnMicrofone.disabled = true;
     } else {
@@ -44,7 +40,6 @@ if (window.location.protocol === 'file:') {
         };
 
         reconhecimento.onerror = (event) => {
-            // Mostra o erro na tela para sabermos o que está acontecendo
             statusEl.innerText = 'ERRO MICROFONE: ' + event.error;
             statusEl.style.color = 'red';
             ouvindo = false;
@@ -81,7 +76,7 @@ if (window.location.protocol === 'file:') {
                     
                     reconhecimento.start();
                 } catch (e) {
-                    statusEl.innerText = 'ERRO AO INICIAR: ' + e.message;
+                    statusEl.innerText = 'ERRO: ' + e.message;
                     statusEl.style.color = 'red';
                     ouvindo = false;
                     btnMicrofone.classList.remove('ouvindo');
@@ -97,6 +92,7 @@ if (window.location.protocol === 'file:') {
             statusEl.innerText = 'Enviando para o boneco...';
             
             try {
+                // Procura a caixa de texto do VLibras
                 const vlibrasInput = document.querySelector('.vpw-text-field');
                 const vlibrasBtn = document.querySelector('.vpw-translate-btn');
                 
@@ -106,6 +102,7 @@ if (window.location.protocol === 'file:') {
                     vlibrasBtn.click();
                     statusEl.innerText = 'Articulando sinais!';
                 } else {
+                    // Fallback caso o boneco esteja fechado
                     statusEl.innerText = 'Abra o boneco no canto direito!';
                     selecionarTexto(textoReconhecido);
                 }
