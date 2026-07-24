@@ -1,7 +1,15 @@
-// Inicializa o VLibras
+// Inicializa o VLibras e tenta abrir o boneco automaticamente
 window.onload = function() {
     if (window.location.protocol !== 'file:') {
         new window.VLibras.Widget('https://vlibras.gov.br/app');
+        
+        // Espera 3 segundos para o VLibras carregar e clica no botão de acesso sozinho
+        setTimeout(() => {
+            const btnAcessoVlibras = document.querySelector('.vw-access-button');
+            if (btnAcessoVlibras) {
+                btnAcessoVlibras.click();
+            }
+        }, 3000);
     }
 };
 
@@ -27,10 +35,8 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
     } else {
         reconhecimento = new SpeechRecognition();
         reconhecimento.lang = 'pt-BR';
-        
-        // A MÁGICA ESTÁ AQUI:
-        reconhecimento.continuous = true; // Fica ouvindo até você mandar parar
-        reconhecimento.interimResults = true; // Escreve enquanto você fala
+        reconhecimento.continuous = true; 
+        reconhecimento.interimResults = true;
 
         reconhecimento.onresult = (event) => {
             let textoTranscrito = '';
@@ -41,7 +47,7 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
         };
 
         reconhecimento.onerror = (event) => {
-            statusEl.innerText = 'ERRO MICROFONE: ' + event.error;
+            statusEl.innerText = 'ERRO: ' + event.error;
             statusEl.style.color = 'red';
             ouvindo = false;
             btnMicrofone.classList.remove('ouvindo');
@@ -64,15 +70,13 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
 
         btnMicrofone.addEventListener('click', () => {
             if (ouvindo) {
-                // Se estiver ouvindo, para
                 reconhecimento.stop();
             } else {
-                // se não estiver, começa
                 try {
                     ouvindo = true;
                     btnMicrofone.classList.add('ouvindo');
                     btnMicrofone.innerText = '🛑 Parar';
-                    statusEl.innerText = 'Ouvindo... (clique em parar quando terminar)';
+                    statusEl.innerText = 'Ouvindo...';
                     statusEl.style.color = 'white';
                     textoReconhecido.innerText = '';
                     btnEnviar.disabled = true;
@@ -95,29 +99,37 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
             statusEl.innerText = 'Enviando para o boneco...';
             
             try {
-                const vlibrasInput = document.querySelector('.vpw-text-field');
-                const vlibrasBtn = document.querySelector('.vpw-translate-btn');
+                let vlibrasInput = document.querySelector('.vpw-text-field');
+                let vlibrasBtn = document.querySelector('.vpw-translate-btn');
                 
-                if (vlibrasInput && vlibrasBtn) {
+                // Se o boneco estiver fechado, abre ele primeiro
+                if (!vlibrasInput || !vlibrasBtn) {
+                    const btnAcessoVlibras = document.querySelector('.vw-access-button');
+                    if (btnAcessoVlibras) btnAcessoVlibras.click();
+                    
+                    // Espera 1.5 segundos para a janela abrir e tenta encontrar os elementos de novo
+                    setTimeout(() => {
+                        vlibrasInput = document.querySelector('.vpw-text-field');
+                        vlibrasBtn = document.querySelector('.vpw-translate-btn');
+                        if (vlibrasInput && vlibrasBtn) {
+                            vlibrasInput.value = texto;
+                            vlibrasInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            vlibrasBtn.click();
+                            statusEl.innerText = 'Articulando sinais!';
+                        } else {
+                            statusEl.innerText = 'Clique no ícone do VLibras no canto direito!';
+                        }
+                    }, 1500);
+                } else {
+                    // Se o boneco já estiver aberto, envia direto
                     vlibrasInput.value = texto;
                     vlibrasInput.dispatchEvent(new Event('input', { bubbles: true }));
                     vlibrasBtn.click();
                     statusEl.innerText = 'Articulando sinais!';
-                } else {
-                    statusEl.innerText = 'Abra o boneco no canto direito!';
-                    selecionarTexto(textoReconhecido);
                 }
             } catch (e) {
                 statusEl.innerText = 'Erro ao enviar.';
             }
         });
     }
-}
-
-function selecionarTexto(elemento) {
-    const range = document.createRange();
-    range.selectNodeContents(elemento);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
 }
