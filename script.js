@@ -13,9 +13,8 @@ const statusEl = document.getElementById('status');
 let reconhecimento;
 let ouvindo = false;
 
-// Verifica se os elementos existem na tela antes de fazer qualquer coisa
 if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
-    console.error("Erro: Elementos HTML não encontrados. Verifique seu index.html.");
+    console.error("Erro: Elementos HTML não encontrados.");
 } else {
     btnEnviar.disabled = true;
 
@@ -28,8 +27,10 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
     } else {
         reconhecimento = new SpeechRecognition();
         reconhecimento.lang = 'pt-BR';
-        reconhecimento.continuous = false;
-        reconhecimento.interimResults = true;
+        
+        // A MÁGICA ESTÁ AQUI:
+        reconhecimento.continuous = true; // Fica ouvindo até você mandar parar
+        reconhecimento.interimResults = true; // Escreve enquanto você fala
 
         reconhecimento.onresult = (event) => {
             let textoTranscrito = '';
@@ -63,13 +64,15 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
 
         btnMicrofone.addEventListener('click', () => {
             if (ouvindo) {
+                // Se estiver ouvindo, para
                 reconhecimento.stop();
             } else {
+                // se não estiver, começa
                 try {
                     ouvindo = true;
                     btnMicrofone.classList.add('ouvindo');
                     btnMicrofone.innerText = '🛑 Parar';
-                    statusEl.innerText = 'Ouvindo...';
+                    statusEl.innerText = 'Ouvindo... (clique em parar quando terminar)';
                     statusEl.style.color = 'white';
                     textoReconhecido.innerText = '';
                     btnEnviar.disabled = true;
@@ -92,7 +95,6 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
             statusEl.innerText = 'Enviando para o boneco...';
             
             try {
-                // Procura a caixa de texto do VLibras
                 const vlibrasInput = document.querySelector('.vpw-text-field');
                 const vlibrasBtn = document.querySelector('.vpw-translate-btn');
                 
@@ -102,7 +104,6 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
                     vlibrasBtn.click();
                     statusEl.innerText = 'Articulando sinais!';
                 } else {
-                    // Fallback caso o boneco esteja fechado
                     statusEl.innerText = 'Abra o boneco no canto direito!';
                     selecionarTexto(textoReconhecido);
                 }
