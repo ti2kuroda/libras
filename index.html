@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tradutor Libras - Voz para Avatar</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Importação da API Oficial do VLibras (Gov.br) -->
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Tradutor de Voz para Libras 🤟</h1>
+        <p>Fale no microfone e veja a tradução oficial do Gov.br.</p>
+
+        <!-- Área onde o texto reconhecido aparece -->
+        <div id="texto-reconhecido" class="caixa-texto">
+            O texto que você falar aparecerá aqui...
+        </div>
+
+        <!-- Botão de Microfone -->
+        <button id="btn-microfone" class="btn-mic">
+            🎤 Falar
+        </button>
+
+        <div id="status" class="status">Aguardando ação</div>
+    </div>
+
+    <!-- Div obrigatória para o Widget do VLibras criar o boneco na tela -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
