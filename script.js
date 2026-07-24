@@ -1,15 +1,10 @@
-// Inicializa o VLibras e tenta abrir o boneco automaticamente
+// Inicializa o VLibras com segurança
 window.onload = function() {
-    if (window.location.protocol !== 'file:') {
+    if (window.VLibras) {
         new window.VLibras.Widget('https://vlibras.gov.br/app');
-        
-        // Espera 3 segundos para o VLibras carregar e clica no botão de acesso sozinho
-        setTimeout(() => {
-            const btnAcessoVlibras = document.querySelector('.vw-access-button');
-            if (btnAcessoVlibras) {
-                btnAcessoVlibras.click();
-            }
-        }, 3000);
+    } else {
+        // Tenta novamente em 1 segundo se a internet tiver demorado para carregar o script
+        setTimeout(window.onload, 1000);
     }
 };
 
@@ -92,44 +87,28 @@ if (!btnMicrofone || !btnEnviar || !textoReconhecido || !statusEl) {
             }
         });
 
+        // Método oficial e nativo do VLibras: Selecionar o texto na tela
         btnEnviar.addEventListener('click', () => {
             const texto = textoReconhecido.innerText;
             if (!texto) return;
 
-            statusEl.innerText = 'Enviando para o boneco...';
+            statusEl.innerText = 'Traduzindo...';
             
-            try {
-                let vlibrasInput = document.querySelector('.vpw-text-field');
-                let vlibrasBtn = document.querySelector('.vpw-translate-btn');
-                
-                // Se o boneco estiver fechado, abre ele primeiro
-                if (!vlibrasInput || !vlibrasBtn) {
-                    const btnAcessoVlibras = document.querySelector('.vw-access-button');
-                    if (btnAcessoVlibras) btnAcessoVlibras.click();
-                    
-                    // Espera 1.5 segundos para a janela abrir e tenta encontrar os elementos de novo
-                    setTimeout(() => {
-                        vlibrasInput = document.querySelector('.vpw-text-field');
-                        vlibrasBtn = document.querySelector('.vpw-translate-btn');
-                        if (vlibrasInput && vlibrasBtn) {
-                            vlibrasInput.value = texto;
-                            vlibrasInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            vlibrasBtn.click();
-                            statusEl.innerText = 'Articulando sinais!';
-                        } else {
-                            statusEl.innerText = 'Clique no ícone do VLibras no canto direito!';
-                        }
-                    }, 1500);
-                } else {
-                    // Se o boneco já estiver aberto, envia direto
-                    vlibrasInput.value = texto;
-                    vlibrasInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    vlibrasBtn.click();
-                    statusEl.innerText = 'Articulando sinais!';
-                }
-            } catch (e) {
-                statusEl.innerText = 'Erro ao enviar.';
-            }
+            // Seleciona o texto do campo para o VLibras ler
+            const range = document.createRange();
+            range.selectNodeContents(textoReconhecido);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            
+            // Dispara o evento que o VLibras escuta para saber que um texto foi selecionado
+            document.dispatchEvent(new MouseEvent('mouseup', { 
+                bubbles: true, 
+                cancelable: true, 
+                view: window 
+            }));
+            
+            statusEl.innerText = 'Boneco aberto? Se sim, ele vai articular!';
         });
     }
 }
